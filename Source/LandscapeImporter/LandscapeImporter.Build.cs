@@ -67,11 +67,22 @@ public class LandscapeImporter : ModuleRules
 			}
 			);
 
-        string LibrariesPath = Path.Combine(ThirdPartyPath, "GDAL", "Libraries");
+        if (Target.Platform == UnrealTargetPlatform.Win64)
+        {
+            string LibrariesPath = Path.Combine(ThirdPartyPath, "GDAL", "Libraries/Win64");
 
-        // PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "gdal111.dll"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "gdal_i.lib"));
-        PublicIncludePaths.Add(Path.Combine(ThirdPartyPath, "GDAL", "Includes"));
+            // PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "gdal111.dll"));
+            PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "gdal_i.lib"));
+            PublicIncludePaths.Add(Path.Combine(ThirdPartyPath, "GDAL", "Includes"));
+		}
+		else if (Target.Platform == UnrealTargetPlatform.Mac)
+		{
+			string LibrariesPath = Path.Combine(ThirdPartyPath, "GDAL", "Libraries/Darwin");
+			PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "libgdal.dylib"));
+		}
+
+		// Includes are the same (hopefully) for all platforms...
+		PublicIncludePaths.Add(Path.Combine(ThirdPartyPath, "GDAL", "Includes"));
 	}
 
     /*public bool LoadGDALsMagic(TargetInfo Target)
