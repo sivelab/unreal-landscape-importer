@@ -1,13 +1,12 @@
 /******************************************************************************
- * $Id: gdaljp2abstractdataset.h 29131 2015-05-03 14:47:58Z rouault $
+ * $Id: gdaljp2metadatagenerator.h 29048 2015-04-29 14:48:33Z rouault $
  *
  * Project:  GDAL 
- * Purpose:  GDALGeorefPamDataset with helper to read georeferencing and other
- *           metadata from JP2Boxes
- * Author:   Even Rouault <even dot rouault at mines-paris dot org>
+ * Purpose:  GDALJP2Metadata: metadata generator
+ * Author:   Even Rouault <even dot rouault at spatialys dot com>
  *
  ******************************************************************************
- * Copyright (c) 2013, Even Rouault <even dot rouault at mines-paris dot org>
+ * Copyright (c) 2015, European Union Satellite Centre
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,33 +27,14 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef GDAL_JP2_ABSTRACT_DATASET_H_INCLUDED
-#define GDAL_JP2_ABSTRACT_DATASET_H_INCLUDED
+#ifndef GDAL_JP2METADATA_GENERATOR_H_INCLUDED
+#define GDAL_JP2METADATA_GENERATOR_H_INCLUDED
 
-#include "gdalgeorefpamdataset.h"
 
-class CPL_DLL GDALJP2AbstractDataset: public GDALGeorefPamDataset
-{
-    char*               pszWldFilename;
+#include "cpl_string.h"
+#include "cpl_minixml.h"
 
-    GDALDataset*        poMemDS;
-    char**              papszMetadataFiles;
+CPLXMLNode* GDALGMLJP2GenerateMetadata(const CPLString& osTemplateFile,
+                                       const CPLString& osSourceFile);
 
-  protected:
-    virtual int         CloseDependentDatasets();
-
-  public:
-        GDALJP2AbstractDataset();
-        ~GDALJP2AbstractDataset();
-
-        void LoadJP2Metadata(GDALOpenInfo* poOpenInfo,
-                             const char* pszOverideFilename = NULL);
-        void            LoadVectorLayers(int bOpenRemoteResources = FALSE);
-
-        virtual char      **GetFileList(void);
-
-        virtual int         GetLayerCount();
-        virtual OGRLayer   *GetLayer(int i);
-};
-
-#endif /* GDAL_JP2_ABSTRACT_DATASET_H_INCLUDED */
+#endif /* GDAL_JP2METADATA_GENERATOR_H_INCLUDED */

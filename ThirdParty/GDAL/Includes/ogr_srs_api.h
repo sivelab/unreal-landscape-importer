@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogr_srs_api.h 27109 2014-03-28 20:26:34Z kyle $
+ * $Id: ogr_srs_api.h 31181 2015-10-28 15:02:25Z rouault $
  *
  * Project:  OpenGIS Simple Features Reference Implementation
  * Purpose:  C API and constant declarations for OGR Spatial References.
@@ -136,6 +136,9 @@ typedef enum {
                                 "Lambert_Azimuthal_Equal_Area"
 #define SRS_PT_MERCATOR_1SP     "Mercator_1SP"
 #define SRS_PT_MERCATOR_2SP     "Mercator_2SP"
+// Mercator_Auxiliary_Sphere is used used by ESRI to mean EPSG:3875
+#define SRS_PT_MERCATOR_AUXILIARY_SPHERE                                 \
+                                "Mercator_Auxiliary_Sphere"
 #define SRS_PT_MILLER_CYLINDRICAL "Miller_Cylindrical"
 #define SRS_PT_MOLLWEIDE        "Mollweide"
 #define SRS_PT_NEW_ZEALAND_MAP_GRID                                     \
@@ -182,7 +185,14 @@ typedef enum {
 #define SRS_PT_WAGNER_V         "Wagner_V"
 #define SRS_PT_WAGNER_VI        "Wagner_VI"
 #define SRS_PT_WAGNER_VII       "Wagner_VII"
-                                
+#define SRS_PT_QSC              "Quadrilateralized_Spherical_Cube"
+#define SRS_PT_AITOFF           "Aitoff" 
+#define SRS_PT_WINKEL_I         "Winkel_I" 
+#define SRS_PT_WINKEL_II        "Winkel_II" 
+#define SRS_PT_WINKEL_TRIPEL    "Winkel_Tripel" 
+#define SRS_PT_CRASTER_PARABOLIC    "Craster_Parabolic" 
+#define SRS_PT_LOXIMUTHAL        "Loximuthal"
+#define SRS_PT_QUARTIC_AUTHALIC  "Quartic_Authalic"
 
 #define SRS_PP_CENTRAL_MERIDIAN         "central_meridian"
 #define SRS_PP_SCALE_FACTOR             "scale_factor"
@@ -330,8 +340,7 @@ OGRErr CPL_DLL OSRImportFromDict( OGRSpatialReferenceH, const char *,
                                   const char * );
 OGRErr CPL_DLL OSRImportFromPanorama( OGRSpatialReferenceH, long, long, long,
                                       double * );
-OGRErr CPL_DLL OSRImportFromOzi( OGRSpatialReferenceH , const char *, const char *,
-                                 const char * );
+OGRErr CPL_DLL OSRImportFromOzi( OGRSpatialReferenceH , const char * const *);
 OGRErr CPL_DLL OSRImportFromMICoordSys( OGRSpatialReferenceH, const char *);
 OGRErr CPL_DLL OSRImportFromERM( OGRSpatialReferenceH,
                                  const char *, const char *, const char * );
@@ -453,7 +462,8 @@ int    CPL_DLL OSREPSGTreatsAsNorthingEasting( OGRSpatialReferenceH hSRS );
 const char CPL_DLL *OSRGetAxis( OGRSpatialReferenceH hSRS,
                                 const char *pszTargetKey, int iAxis, 
                                 OGRAxisOrientation *peOrientation );
-OGRErr CPL_DLL OSRSetAxes( const char *pszTargetKey,
+OGRErr CPL_DLL OSRSetAxes( OGRSpatialReferenceH hSRS, 
+                           const char *pszTargetKey,
                            const char *pszXAxisName,
                            OGRAxisOrientation eXAxisOrientation,
                            const char *pszYAxisName, 
@@ -551,6 +561,13 @@ OGRErr CPL_DLL OSRSetHOM( OGRSpatialReferenceH hSRS,
                           double dfScale,
                           double dfFalseEasting, double dfFalseNorthing );
 
+OGRErr CPL_DLL OSRSetHOMAC( OGRSpatialReferenceH hSRS, 
+                    double dfCenterLat, double dfCenterLong,
+                    double dfAzimuth, double dfRectToSkew, 
+                    double dfScale,
+                    double dfFalseEasting,
+                    double dfFalseNorthing );
+
 /** Hotine Oblique Mercator using two points on centerline */
 OGRErr CPL_DLL OSRSetHOM2PNO( OGRSpatialReferenceH hSRS, double dfCenterLat,
                               double dfLat1, double dfLong1,
@@ -605,6 +622,10 @@ OGRErr CPL_DLL OSRSetMercator( OGRSpatialReferenceH hSRS,
                                double dfCenterLat, double dfCenterLong,
                                double dfScale, 
                                double dfFalseEasting, double dfFalseNorthing );
+OGRErr CPL_DLL OSRSetMercator2SP( OGRSpatialReferenceH hSRS, 
+                          double dfStdP1,
+                          double dfCenterLat, double dfCenterLong,
+                          double dfFalseEasting, double dfFalseNorthing );
 
 /** Mollweide */
 OGRErr CPL_DLL  OSRSetMollweide( OGRSpatialReferenceH hSRS,
@@ -692,6 +713,11 @@ OGRErr CPL_DLL OSRSetTMSO( OGRSpatialReferenceH hSRS,
                            double dfScale,
                            double dfFalseEasting, double dfFalseNorthing );
 
+OGRErr CPL_DLL OSRSetTPED( OGRSpatialReferenceH hSRS,
+                   double dfLat1, double dfLong1,
+                   double dfLat2, double dfLong2,
+                   double dfFalseEasting, double dfFalseNorthing );
+
 /** VanDerGrinten */
 OGRErr CPL_DLL OSRSetVDG( OGRSpatialReferenceH hSRS,
                           double dfCenterLong,
@@ -699,8 +725,16 @@ OGRErr CPL_DLL OSRSetVDG( OGRSpatialReferenceH hSRS,
 
 /** Wagner I -- VII */
 OGRErr CPL_DLL OSRSetWagner( OGRSpatialReferenceH hSRS, int nVariation,
+                             double dfCenterLat,
                              double dfFalseEasting,
                              double dfFalseNorthing );
+
+/** Quadrilateralized Spherical Cube */
+OGRErr CPL_DLL OSRSetQSC( OGRSpatialReferenceH hSRS,
+                              double dfCenterLat, double dfCenterLong );
+
+double CPL_DLL OSRCalcInvFlattening( double dfSemiMajor, double dfSemiMinor );
+double CPL_DLL OSRCalcSemiMinorFromInvFlattening( double dfSemiMajor, double dfInvFlattening );
 
 void CPL_DLL OSRCleanup( void );
 
