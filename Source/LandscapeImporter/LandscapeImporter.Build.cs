@@ -70,8 +70,10 @@ public class LandscapeImporter : ModuleRules
         if (Target.Platform == UnrealTargetPlatform.Win64)
         {
             string LibrariesPath = Path.Combine(ThirdPartyPath, "GDAL", "Libraries/Win64");
+            
+            // This does not work! You must put gdal200.dll in your path.
+            // RuntimeDependencies.Add(new RuntimeDependency(Path.Combine(LibrariesPath, "gdal200.dll")));
 
-            // PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "gdal111.dll"));
             PublicAdditionalLibraries.Add(Path.Combine(LibrariesPath, "gdal_i.lib"));
             PublicIncludePaths.Add(Path.Combine(ThirdPartyPath, "GDAL", "Includes"));
 		}
