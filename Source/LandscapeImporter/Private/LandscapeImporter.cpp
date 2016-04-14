@@ -27,14 +27,25 @@
 
 #include "tinydir.h"
 
-
 static const FName LandscapeImporterTabName("LandscapeImporter");
 
 #define LOCTEXT_NAMESPACE "FLandscapeImporterModule"
 
+#define DEM_WIDTH 6242.0f
+#define JP2_WIDTH 24967.0f
+
+// DEM Size is
+// Size is 6242, 12835
+
+// JP2 Size is
+// Size is 24967, 51341
+
+/** 
+ */
 void FLandscapeImporterModule::StartupModule()
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+	// This code will execute after your module is loaded into memory; the exact
+    // timing is specified in the .uplugin (LandscapeImporter.uplugin) file per-module
 	
 	FLandscapeImporterStyle::Initialize();
 	FLandscapeImporterStyle::ReloadTextures();
@@ -43,10 +54,10 @@ void FLandscapeImporterModule::StartupModule()
 	
 	PluginCommands = MakeShareable(new FUICommandList);
 
-	PluginCommands->MapAction(
-		FLandscapeImporterCommands::Get().PluginAction,
-		FExecuteAction::CreateRaw(this, &FLandscapeImporterModule::PluginButtonClicked),
-		FCanExecuteAction());
+//	PluginCommands->MapAction(
+//		FLandscapeImporterCommands::Get().PluginAction,
+//		FExecuteAction::CreateRaw(this, &FLandscapeImporterModule::PluginButtonClicked),
+//		FCanExecuteAction());
 		
 	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
 	
@@ -73,9 +84,7 @@ void FLandscapeImporterModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
-	
-	
-	
+		
 	FLandscapeImporterStyle::Shutdown();
 
 	FLandscapeImporterCommands::Unregister();
@@ -83,6 +92,8 @@ void FLandscapeImporterModule::ShutdownModule()
 	FEditorModeRegistry::Get().UnregisterMode(FLandscapeImporterEdMode::EM_LandscapeImporterEdModeId);
 }
 
+/**
+ */
 void FLandscapeImporterModule::ImportLandscapeTextures(std::string texturedir)
 {
 	//TODO: Set Mip Gen Settings to NoMipmaps.
@@ -143,7 +154,7 @@ void FLandscapeImporterModule::ImportLandscapeTextures(std::string texturedir)
 //	}
 //}
 
-void FLandscapeImporterModule::ImportLandscapeFromDEM(std::string demfilename)
+void FLandscapeImporterModule::ImportLandscapeFromDEM(std::string demfilename, int textureSize)
 {
 	int add;
 	int mult;
@@ -232,6 +243,15 @@ void FLandscapeImporterModule::ImportLandscapeFromDEM(std::string demfilename)
 
 	int block_size = 2048;
 	int needed_overlap = block_size / 512;
+    
+    //Scale = Texture Size (8192) * (DEM_Width/JP2_WIDTH)
+    // 2049.082031
+    float textureScale = textureSize * (DEM_WIDTH/JP2_WIDTH);
+    DialogText = FText::Format(
+                               LOCTEXT("PluginButtonDialogText", "Texture Scale {0}"),
+                               FText::FromString(FString::FromInt(textureSize))
+                               );
+    FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 
 	//BuildLanscape(pafScanline, m_nXSize, m_nYSize, 0, 0, block_size, block_size, add, mult, min, max, set_min_to_zero);
 
@@ -244,7 +264,7 @@ void FLandscapeImporterModule::ImportLandscapeFromDEM(std::string demfilename)
 	//	for (int j = 0; j < 2; j++) {
 			int startx = (i*block_size) - (i * needed_overlap);
 			int starty = (j*block_size) - (j * needed_overlap);
-			BuildLanscape(pafScanline, m_nXSize, m_nYSize, startx, starty, block_size, block_size, add, mult, min, max, set_min_to_zero, i, j);
+			BuildLanscape(pafScanline, m_nXSize, m_nYSize, startx, starty, block_size, block_size, add, mult, min, max, set_min_to_zero, i, j, textureScale);
 
 			/*DialogText = FText::Format(
 				LOCTEXT("PluginButtonDialogText", "Making Block {0}: Starting at ({1}, {2}) Size: {3}"),
@@ -367,15 +387,31 @@ void FLandscapeImporterModule::ImportLandscapeFromDEM(std::string demfilename)
 	//Landscape->Import(FGuid::NewGuid(), ImportLandscape_Width, ImportLandscape_Height, QuadsPerComponent, SectionsPerComponent, QuadsPerSection, , NULL, LayerInfos);*/
 }
 
-void FLandscapeImporterModule::PluginButtonClicked()
-{
-	std::string m_filename = "E:\\Unreal\\Terrain Converter\\in\\DTEEC_003910_1685_005400_1685_U01.IMG";
-	std::string t_filedir = "E:\\Unreal\\Terrain Converter\\out";
-	ImportLandscapeTextures(t_filedir);
-	ImportLandscapeFromDEM(m_filename);
-}
 
-void FLandscapeImporterModule::BuildLanscape(float *pafScanline, int x_size, int y_size, int o_x, int o_y, int s_x, int s_y, int add, int mult, float min, float max, bool set_min_to_zero, int x, int y)
+// This is not used anymore
+//void FLandscapeImporterModule::PluginButtonClicked()
+//{
+//    std::string m_filename;
+//    std::string t_filedir;
+//
+////    if ((Target.Platform == UnrealTargetPlatform.Win32) || (Target.Platform == UnrealTargetPlatform.Win64)) {
+//        // Windows only
+////        m_filename = "E:\\Unreal\\Terrain Converter\\in\\DTEEC_003910_1685_005400_1685_U01.IMG";
+////        t_filedir = "E:\\Unreal\\Terrain Converter\\out";
+////    }
+////    else if ((Target.Platform == UnrealTargetPlatform.Linux) || (Target.Platform == UnrealTargetPlatform.Mac)) {
+//       // Modified for use on OS X
+//        //    }
+//    m_filename = "/Users/willemsn/Downloads/DTEEC_003910_1685_005400_1685_U01.IMG";
+//    t_filedir = "/Users/willemsn/umd/Mars/terrain-converter/out";
+//
+//
+//
+//	ImportLandscapeTextures(t_filedir);
+//	ImportLandscapeFromDEM(m_filename);
+//}
+
+void FLandscapeImporterModule::BuildLanscape(float *pafScanline, int x_size, int y_size, int o_x, int o_y, int s_x, int s_y, int add, int mult, float min, float max, bool set_min_to_zero, int x, int y, float textureScale)
 {
 	FText DialogText;
 
@@ -519,7 +555,7 @@ void FLandscapeImporterModule::BuildLanscape(float *pafScanline, int x_size, int
 	UClass* FactoryClass = UMaterialInstanceConstantFactoryNew::StaticClass();
 	UMaterialInstanceConstantFactoryNew* Factory = NewObject<UMaterialInstanceConstantFactoryNew>();
 	if (Factory->ConfigureProperties()) {
-		std::string AssetName = "test" + std::to_string(x) + "_" + std::to_string(y);
+		std::string AssetName = "LMat" + std::to_string(x) + "_" + std::to_string(y);
 		FString PackagePath = "/Game/Landscape/Materials";
 		FAssetToolsModule & AssetToolsModule = FModuleManager::Get().LoadModuleChecked<FAssetToolsModule>("AssetTools");
 		NewMaterialInstance = CastChecked<UMaterialInstanceConstant>(AssetToolsModule.Get().CreateAsset(AssetName.c_str(), PackagePath, UMaterialInstanceConstant::StaticClass(), Factory));
@@ -549,8 +585,9 @@ void FLandscapeImporterModule::BuildLanscape(float *pafScanline, int x_size, int
 		NewMaterialInstance->SetParentEditorOnly(material);
 
 		NewMaterialInstance->SetTextureParameterValueEditorOnly("Texture", texture);
-		//Scale = Block Size (8192) * (DEM_Width/JP2_WIDTH)
-		NewMaterialInstance->SetVectorParameterValueEditorOnly("Scale", FLinearColor(2049.082031, 2049.082031, 0, 0));
+		//Scale = Texture Size (8192) * (DEM_Width/JP2_WIDTH)
+        // 2049.082031
+		NewMaterialInstance->SetVectorParameterValueEditorOnly("Scale", FLinearColor(textureScale, textureScale, 0, 0));
 
 		NewMaterialInstance->MarkPackageDirty();
 		NewMaterialInstance->PostEditChange();

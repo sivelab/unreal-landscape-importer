@@ -3,8 +3,13 @@
 #include "LandscapeImporterEdModeToolkit.h"
 #include "LandscapeImporter.h"
 
-#define TEXTURES_DIRECTORY "C:\\Users\\sivelab\\Desktop\\Landscapes\\003910\\out"
-#define DEM_FILEPATH "C:\\Users\\sivelab\\Desktop\\Landscapes\\003910\\in\\DTEEC_003910_1685_005400_1685_U01.IMG"
+#define TEXTURES_DIRECTORY "/Users/willemsn/umd/Mars/terrain-converter/out"
+#define DEM_FILEPATH "/Users/willemsn/Downloads/DTEEC_003910_1685_005400_1685_U01.IMG"
+#define TEXTURE_SIZE 2048
+
+
+//    m_filename = "/Users/willemsn/Downloads/DTEEC_003910_1685_005400_1685_U01.IMG";
+//    t_filedir = "/Users/willemsn/umd/Mars/terrain-converter/out";
 
 #define LOCTEXT_NAMESPACE "FLandscapeImporterEdModeToolkit"
 
@@ -54,7 +59,7 @@ FLandscapeImporterEdModeToolkit::FLandscapeImporterEdModeToolkit()
 			GEditor->BeginTransaction(LOCTEXT("ImportingLandscapeActionName", "Importing Landscape"));
 
 
-			FLandscapeImporterModule::ImportLandscapeFromDEM(DEM_FILEPATH);
+			FLandscapeImporterModule::ImportLandscapeFromDEM(DEM_FILEPATH, TEXTURE_SIZE);
 
 			// We're done moving actors so close transaction
 			GEditor->EndTransaction();
